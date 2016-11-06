@@ -1,0 +1,82 @@
+
+
+First install rvest library
+install.packages(rvest)
+
+#load the libraary
+> library(rvest)
+> 
+#read the html content with read_html
+> movie_db<-read_html('http://www.imdb.com/movies-in-theaters/?ref_=nv_mv_inth_1')
+> 
+> 
+ #extract movie titles with html_nodes
+> title <- movie_db%>%html_nodes("h4 a")%>%html_text() 
+> title
+ [1] " Doctor Strange (2016)"                              " Trolls (2016)"                                     
+ [3] " Hacksaw Ridge (2016)"                               " Loving (2016)"                                     
+ [5] " The Eagle Huntress (2016)"                          " Peter and the Farm (2016)"                         
+ [7] " Boo! A Madea Halloween (2016)"                      " Jack Reacher: Never Go Back (2016)"                
+ [9] " Ouija: Origin of Evil (2016)"                       " The Accountant (2016)"                             
+[11] " The Girl on the Train (2016)"                       " Miss Peregrine's Home for Peculiar Children (2016)"
+[13] " Keeping Up with the Joneses (2016)"                 " Storks (2016)"                                     
+[15] " Inferno (2016)"                                     " Ae Dil Hai Mushkil (2016)"                         
+> 
+
+#extract movie genres
+> movie_genre <- movie_db%>%html_nodes("time+span")%>%html_text() 
+> movie_genre
+ [1] "Action"      "Animation"   "Biography"   "Biography"   "Documentary" "Documentary" "Comedy"      "Action"     
+ [9] "Horror"      "Action"      "Drama"       "Adventure"   "Action"      "Animation"   "Action"      "Drama"      
+> 
+#xtract time 
+> time <- movie_db%>%html_nodes("time")%>%html_text() 
+> time
+ [1] "115 min" "92 min"  "131 min" "123 min" "87 min"  "91 min"  "103 min" "118 min" "99 min"  "128 min" "112 min"
+[12] "127 min" "105 min" "87 min"  "121 min" "158 min"
+> 
+
+#extract metascore of movies
+> metascore <-movie_db%>%html_nodes(".rating_txt")%>%html_nodes("strong")%>%html_text() 
+> 
+> metascore
+ [1] "72" "56" "71" "77" "72" "81" "30" "47" "65" "51" "48" "57" "34" "56" "42" "40"
+> 
+
+#ombine tttle movie genre time and metascore to datarame
+> imdb_df <- data.frame(title,movie_genre,time,metascore)
+
+#replace mins with blankspaces
+> imdb_df$time <-gsub("min","",imdb_df$time)
+
+#convert time toi numeric
+> imdb_df$time <-as.numeric(imdb_df$time)
+> 
+
+extract movie genre with duration less than 200
+> imdb_df$title[imdb_df$movie_genre!= "Action" & imdb_df$time<200]
+ [1]  Trolls (2016)                                       Hacksaw Ridge (2016)                              
+ [3]  Loving (2016)                                       The Eagle Huntress (2016)                         
+ [5]  Peter and the Farm (2016)                           Boo! A Madea Halloween (2016)                     
+ [7]  Ouija: Origin of Evil (2016)                        The Girl on the Train (2016)                      
+ [9]  Miss Peregrine's Home for Peculiar Children (2016)  Storks (2016)                                     
+[11]  Ae Dil Hai Mushkil (2016)                         
+16 Levels:  Ae Dil Hai Mushkil (2016)  Boo! A Madea Halloween (2016)  Doctor Strange (2016) ...  Trolls (2016)
+
+
+> movie_genre_time<-by(imdb_df$time,movie_genre,function(x) mean(x))
+> 
+> barplot(movie_genre_time,main="Average movie length by genre",xlab="Number of genres",ylab="Time in mins")
+> 
+for graph see 
+> 
+> movie_long_time<-by(imdb_df$time,movie_genre,function(x) max(x))
+> 
+> barplot(movie_long_time,main="movie genres with long duration",xlab="movies",ylab="Time in mins")
+> 
+> 
+> 
+> movie_long_time<-by(imdb_df$time,movie_genre,function(x) min(x))
+> 
+> barplot(movie_long_time,main="movie genres with short duration",xlab="movies",ylab="Time in mins")
+> 
